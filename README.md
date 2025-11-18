@@ -27,6 +27,7 @@ const hideCompleted = ref(false)  // Booléen réactif
 
 ### 3. **Propriétés calculées avec `computed()`**
 Valeurs dérivées qui se recalculent automatiquement quand leurs dépendances changent. Optimisées avec mise en cache.
+computed s'utilise donc que pour les valeurs dérivées. Ex sortedTasks est un dérivé de tasks.
 
 ```js
 const sortedTasks = computed(() => {

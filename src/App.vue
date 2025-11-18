@@ -20,6 +20,7 @@
         <input type="checkbox" v-model="hideCompleted"> 
         Masquer les tâches completed
       </label>
+      <p v-if="remainingTasks > 0">{{ remainingTasks }} tâche{{ remainingTasks > 1 ? 's': '' }} à faire</p>
     </div>
     <div v-else class="alert alert-info text-center">Vous n'avez pas encore de tâche.</div>
   </div>
@@ -57,5 +58,9 @@ const sortedTasks = computed(() => {
 // Avantages de computed : recalcul uniquement lorsque les dépendances changent, optimisation des performances
 
 const hideCompleted = ref(false)
+
+const remainingTasks = computed(() => {
+  return tasks.value.filter(t => t.completed === false).length
+})
 
 </script>
