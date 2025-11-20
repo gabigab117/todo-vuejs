@@ -1,7 +1,13 @@
 <template>
+  <Layout>
+    <template v-slot:header>En-tête</template> <!--On peut remplacer v-slot:header par #header-->
+    <template v-slot:aside>aside</template>
+    <template v-slot:main>main</template>
+    <template v-slot:footer>footer</template>
+  </Layout>
   <div class="container mt-5">
     <h1 class="text-center mb-4 text-primary">Todolist</h1>
-
+    <Button><strong>Mon bouton</strong></Button>
     <form @submit.prevent="addTask" class="mb-4">
       <div class="input-group">
         <input type="text" v-model="taskName" class="form-control" placeholder="Nouvelle tâche..."></input>
@@ -14,7 +20,12 @@
     <div v-if="tasks.length > 0" class="card">
       <ul class="list-group list-group-flush">
         <li v-for="task in sortedTasks" :key="task.date" :style="{'text-decoration': task.completed ? 'line-through' : ''}" class="list-group-item">{{ task.title }} - <div :class="{'text-danger': task.completed == false}">{{ task.completed ? 'Terminé': 'En cours' }}</div>
-        <input type="checkbox" v-model="task.completed"></li>
+        <Checkbox :label="task.title" 
+        v-model="task.completed"
+        @check="console.log('coché')"
+        @uncheck="console.log('décoché')"
+        />
+      </li>
       </ul>
       <label>
         <input type="checkbox" v-model="hideCompleted"> 
@@ -32,6 +43,9 @@
 
 <script setup>
 import {computed, ref} from 'vue'
+import Checkbox from './Checkbox.vue'
+import Button from './Button.vue'
+import Layout from './Layout.vue'
 
 const tasks = ref([])
 const addTask = () => {
