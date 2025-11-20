@@ -112,6 +112,70 @@ const addTask = () => {
 }
 ```
 
+### 8. **Composants et Communication**
+
+#### **Props (`defineProps`)**
+Permet de passer des données d'un parent vers un enfant.
+```js
+// Dans l'enfant (Checkbox.vue)
+const props = defineProps({
+    label: String
+})
+```
+```vue
+<!-- Dans le parent -->
+<Checkbox label="Ma tâche" />
+```
+
+#### **Événements (`defineEmits`)**
+Permet à un enfant d'envoyer des signaux au parent.
+```js
+// Dans l'enfant
+const emits = defineEmits(['check', 'uncheck'])
+const onChange = () => emits('check')
+```
+```vue
+<!-- Dans le parent -->
+<Checkbox @check="console.log('coché')" />
+```
+
+#### **v-model sur les composants (`defineModel`)**
+Simplifie la liaison bidirectionnelle (two-way binding) entre parent et enfant (Vue 3.4+).
+```js
+// Dans l'enfant
+const modelValue = defineModel()
+```
+```vue
+<!-- Dans le parent -->
+<Checkbox v-model="task.completed" />
+```
+
+#### **Slots (Injection de contenu)**
+Permet d'injecter du contenu HTML depuis le parent à l'intérieur du composant enfant.
+
+**Slot par défaut :**
+```vue
+<!-- Enfant (Button.vue) -->
+<button><slot></slot></button>
+
+<!-- Parent -->
+<Button><strong>Mon texte</strong></Button>
+```
+
+**Slots nommés :**
+Permet de définir plusieurs zones d'injection (ex: header, main, footer).
+```vue
+<!-- Enfant (Layout.vue) -->
+<header><slot name="header"></slot></header>
+<main><slot name="main"></slot></main>
+
+<!-- Parent -->
+<Layout>
+  <template #header>Mon Titre</template>
+  <template #main>Mon Contenu</template>
+</Layout>
+```
+
 ## 🎯 Concepts importants du projet
 
 ### Tri des tâches
