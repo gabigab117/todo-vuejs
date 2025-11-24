@@ -45,7 +45,7 @@ const sortedTasks = computed(() => {
 ### 4. **Directives de template**
 
 #### `v-model` (Liaison bidirectionnelle)
-```vue
+```html
 <input v-model="taskName">
 <!-- Équivalent à :value="taskName" @input="taskName = $event.target.value" -->
 
@@ -53,7 +53,7 @@ const sortedTasks = computed(() => {
 ```
 
 #### `v-if` / `v-else` (Rendu conditionnel)
-```vue
+```html
 <div v-if="tasks.length > 0">
   <!-- Affiche si la condition est vraie -->
 </div>
@@ -63,7 +63,7 @@ const sortedTasks = computed(() => {
 ```
 
 #### `v-for` (Boucles)
-```vue
+```html
 <li v-for="task in sortedTasks" :key="task.date">
   <!-- :key est obligatoire pour l'optimisation du Virtual DOM -->
 </li>
@@ -74,7 +74,7 @@ const sortedTasks = computed(() => {
 #### `:` (Binding d'attributs)
 Raccourci de `v-bind:` pour lier dynamiquement des attributs HTML.
 
-```vue
+```html
 <button :disabled="taskName == 0">
 <div :style="{'text-decoration': task.completed ? 'line-through' : ''}">
 <div :class="{'text-danger': task.completed == false}">
@@ -83,7 +83,7 @@ Raccourci de `v-bind:` pour lier dynamiquement des attributs HTML.
 ### 5. **Gestion d'événements avec `@`**
 Raccourci de `v-on:` pour écouter les événements DOM.
 
-```vue
+```html
 <form @submit.prevent="addTask">
   <!-- @submit = v-on:submit -->
   <!-- .prevent = modificateur qui appelle preventDefault() automatiquement -->
@@ -93,7 +93,7 @@ Raccourci de `v-on:` pour écouter les événements DOM.
 ### 6. **Interpolation de données `{{ }}`**
 Affiche les données réactives dans le template.
 
-```vue
+```html
 {{ taskName }}
 {{ task.completed ? 'Terminé': 'En cours' }}
 ```
@@ -122,7 +122,7 @@ const props = defineProps({
     label: String
 })
 ```
-```vue
+```html
 <!-- Dans le parent -->
 <Checkbox label="Ma tâche" />
 ```
@@ -134,7 +134,7 @@ Permet à un enfant d'envoyer des signaux au parent.
 const emits = defineEmits(['check', 'uncheck'])
 const onChange = () => emits('check')
 ```
-```vue
+```html
 <!-- Dans le parent -->
 <Checkbox @check="console.log('coché')" />
 ```
@@ -145,7 +145,7 @@ Simplifie la liaison bidirectionnelle (two-way binding) entre parent et enfant (
 // Dans l'enfant
 const modelValue = defineModel()
 ```
-```vue
+```html
 <!-- Dans le parent -->
 <Checkbox v-model="task.completed" />
 ```
@@ -154,7 +154,7 @@ const modelValue = defineModel()
 Permet d'injecter du contenu HTML depuis le parent à l'intérieur du composant enfant.
 
 **Slot par défaut :**
-```vue
+```html
 <!-- Enfant (Button.vue) -->
 <button><slot></slot></button>
 
@@ -164,7 +164,7 @@ Permet d'injecter du contenu HTML depuis le parent à l'intérieur du composant 
 
 **Slots nommés :**
 Permet de définir plusieurs zones d'injection (ex: header, main, footer).
-```vue
+```html
 <!-- Enfant (Layout.vue) -->
 <header><slot name="header"></slot></header>
 <main><slot name="main"></slot></main>
