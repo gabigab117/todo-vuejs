@@ -5,6 +5,8 @@
     <template v-slot:main>main</template>
     <template v-slot:footer>footer</template>
   </Layout>
+  <button @click="showTimer = !showTimer">Afficher Masquer</button>
+  <Timer v-if="showTimer" />
   <div class="container mt-5">
     <h1 class="text-center mb-4 text-primary">Todolist</h1>
     <Button><strong>Mon bouton</strong></Button>
@@ -42,12 +44,21 @@
 </style>
 
 <script setup>
-import {computed, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import Checkbox from './Checkbox.vue'
 import Button from './Button.vue'
 import Layout from './Layout.vue'
+import Timer from './Timer.vue'
+
+const showTimer = ref(true)
 
 const tasks = ref([])
+onMounted(async () => {
+  const response = await fetch("taches.json")
+  const data = await response.json()
+  tasks.value = data
+})
+
 const addTask = () => {
   tasks.value.push({
     title: taskName.value,
