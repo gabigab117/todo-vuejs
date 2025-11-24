@@ -162,7 +162,7 @@ Permet d'injecter du contenu HTML depuis le parent à l'intérieur du composant 
 <Button><strong>Mon texte</strong></Button>
 ```
 
-**Slots nommés :**
+#### **Slots nommés :**
 Permet de définir plusieurs zones d'injection (ex: header, main, footer).
 ```html
 <!-- Enfant (Layout.vue) -->
@@ -175,6 +175,58 @@ Permet de définir plusieurs zones d'injection (ex: header, main, footer).
   <template #main>Mon Contenu</template>
 </Layout>
 ```
+
+**Vérification de l'existence d'un slot :**
+```html
+<!-- N'affiche le header que si le slot est fourni -->
+<header v-if="$slots.header"><slot name="header"></slot></header>
+```
+
+### 9. **Hooks de cycle de vie**
+Les hooks permettent d'exécuter du code à des moments précis du cycle de vie d'un composant.
+
+#### `onMounted()`
+S'exécute une fois que le composant est monté dans le DOM. Idéal pour :
+- Récupérer des données d'une API
+- Initialiser des bibliothèques tierces
+- Démarrer des timers ou intervalles
+
+```js
+import { onMounted } from 'vue'
+
+onMounted(async () => {
+  // Chargement des tâches depuis un fichier JSON
+  const response = await fetch("taches.json")
+  const data = await response.json()
+  tasks.value = data
+})
+```
+
+#### `onUnmounted()`
+S'exécute juste avant que le composant soit retiré du DOM. Utilisé pour le nettoyage :
+- Annuler des timers/intervalles
+- Désabonner des événements
+- Libérer des ressources
+
+```js
+import { onUnmounted } from 'vue'
+
+let intervalId = null
+
+onMounted(() => {
+  intervalId = setInterval(() => {
+    seconds.value++
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId) // Nettoyage pour éviter les fuites mémoire
+  }
+})
+```
+
+**Importance du nettoyage** : Sans `onUnmounted()`, les intervalles/timers continuent de s'exécuter même après la destruction du composant, causant des fuites mémoire.
 
 ## 🎯 Concepts importants du projet
 
@@ -215,5 +267,3 @@ npm run dev
 - **Vue.js 3** - Framework JavaScript progressif
 - **Vite** - Build tool et dev server ultra-rapide
 - **Bootstrap 5** - Framework CSS pour le style
-
-REPRENDRE : 
