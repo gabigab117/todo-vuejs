@@ -9,7 +9,7 @@ Syntaxe moderne et concise de Vue 3 qui simplifie l'écriture des composants.
 
 ```vue
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 // Pas besoin de return, tout est automatiquement exposé au template
 </script>
 ```
@@ -18,199 +18,209 @@ import { ref, computed } from 'vue'
 Crée des variables réactives qui déclenchent le re-rendu du composant lors de leur modification.
 
 ```js
-const taskName = ref("")          // Chaîne de caractères réactive
-const tasks = ref([])             // Tableau réactif
-const hideCompleted = ref(false)  // Booléen réactif
+const time = ref(0)              // Nombre réactif
+const page = ref({               // Objet réactif
+  title: ''
+})
 ```
 
 **Important** : Accéder à la valeur avec `.value` dans le script, mais pas dans le template.
 
-### 3. **Propriétés calculées avec `computed()`**
-Valeurs dérivées qui se recalculent automatiquement quand leurs dépendances changent. Optimisées avec mise en cache.
-computed s'utilise donc que pour les valeurs dérivées. Ex sortedTasks est un dérivé de tasks.
+### 3. **Watchers - Observer les changements**
+
+Les watchers permettent d'exécuter du code lorsqu'une valeur réactive change.
+
+#### `watch()`
+Observe une source réactive spécifique et exécute une fonction callback lors des changements.
 
 ```js
-const sortedTasks = computed(() => {
-  // Se recalcule uniquement si tasks ou hideCompleted changent
-  const sorted = tasks.value.toSorted((a, b) => a.completed - b.completed)
-  return hideCompleted.value ? sorted.filter(t => !t.completed) : sorted
+import { watch } from 'vue'
+
+// Observer une propriété d'un objet réactif
+watch(() => page.value.title, (newValue, oldValue) => {
+  document.title = newValue
+})
+
+// Observer une ref directement
+watch(name, (newValue, oldValue) => {
+  document.title = newValue
+}, { immediate: true }) // immediate: se déclenche dès le chargement
+```
+
+#### `watchEffect()`
+Détecte automatiquement les dépendances réactives et s'exécute immédiatement.
+
+```js
+import { watchEffect } from 'vue'
+
+watchEffect(() => {
+  document.title = page.value.title
+  // Pas besoin de spécifier les dépendances
+  // Se déclenche automatiquement au chargement
 })
 ```
 
-**Avantages** :
-- Recalcul uniquement lorsque les dépendances changent
-- Mise en cache pour optimiser les performances
-- Plus performant que des méthodes appelées dans le template
+**À retenir** :
+- `watchEffect` pour faire des effets de bord en dehors du cadre de Vue.js (ex: modifier le DOM natif, localStorage)
+- `computed` pour dériver une valeur à partir d'une autre valeur réactive (utilisé dans le template)
+- `watch` quand vous avez besoin d'accéder aux anciennes valeurs ou contrôler précisément quand le watcher s'exécute
 
-### 4. **Directives de template**
+### 4. **Hooks de cycle de vie**
 
-#### `v-model` (Liaison bidirectionnelle)
-```html
-<input v-model="taskName">
-<!-- Équivalent à :value="taskName" @input="taskName = $event.target.value" -->
+Les hooks permettent d'exécuter du code à des moments précis du cycle de vie d'un composant.
 
-<input type="checkbox" v-model="task.completed">
-```
-
-#### `v-if` / `v-else` (Rendu conditionnel)
-```html
-<div v-if="tasks.length > 0">
-  <!-- Affiche si la condition est vraie -->
-</div>
-<div v-else>
-  <!-- Affiche sinon -->
-</div>
-```
-
-#### `v-for` (Boucles)
-```html
-<li v-for="task in sortedTasks" :key="task.date">
-  <!-- :key est obligatoire pour l'optimisation du Virtual DOM -->
-</li>
-```
-
-**Important** : L'attribut `:key` doit être unique pour chaque élément.
-
-#### `:` (Binding d'attributs)
-Raccourci de `v-bind:` pour lier dynamiquement des attributs HTML.
-
-```html
-<button :disabled="taskName == 0">
-<div :style="{'text-decoration': task.completed ? 'line-through' : ''}">
-<div :class="{'text-danger': task.completed == false}">
-```
-
-### 5. **Gestion d'événements avec `@`**
-Raccourci de `v-on:` pour écouter les événements DOM.
-
-```html
-<form @submit.prevent="addTask">
-  <!-- @submit = v-on:submit -->
-  <!-- .prevent = modificateur qui appelle preventDefault() automatiquement -->
-</form>
-```
-
-### 6. **Interpolation de données `{{ }}`**
-Affiche les données réactives dans le template.
-
-```html
-{{ taskName }}
-{{ task.completed ? 'Terminé': 'En cours' }}
-```
-
-### 7. **Méthodes et fonctions**
-Dans `<script setup>`, les fonctions déclarées sont automatiquement disponibles dans le template.
+#### `onMounted()`
+S'exécute une fois que le composant est monté dans le DOM.
 
 ```js
-const addTask = () => {
-  tasks.value.push({
-    title: taskName.value,
-    completed: false,
-    date: Date.now()
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  intervalId = setInterval(() => {
+    seconds.value++
+  }, 1000)
+})
+```
+
+**Utilisations courantes** :
+- Démarrer des timers ou intervalles
+- Initialiser des bibliothèques tierces
+- Récupérer des données d'une API
+
+#### `onUnmounted()`
+S'exécute juste avant que le composant soit retiré du DOM. **Crucial pour le nettoyage** !
+
+```js
+import { onUnmounted } from 'vue'
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+})
+```
+
+**Importance du nettoyage** : Sans `onUnmounted()`, les intervalles/timers continuent de s'exécuter même après la destruction du composant, causant des fuites mémoire.
+
+### 5. **Composables - Réutiliser la logique**
+
+Les composables sont des fonctions qui encapsulent de la logique réactive réutilisable.  
+**Convention** : préfixe `use` (ex: `useTimer`, `useCounter`, `useFetch`)
+
+```js
+// src/composable/userTimer.js
+import { onMounted, onUnmounted, ref } from "vue"
+
+export function useTimer(initial = 0) {
+  const time = ref(initial)
+  let timer
+
+  onMounted(() => {
+    timer = setInterval(() => {
+      time.value++
+    }, 1000)
   })
-  taskName.value = ""
+
+  onUnmounted(() => {
+    clearInterval(timer)
+  })
+  
+  return {
+    time,
+    reset() {
+      time.value = 0
+    }
+  }
 }
 ```
 
-### 8. **Composants et Communication**
+**Utilisation dans un composant** :
+```vue
+<script setup>
+import { useTimer } from './composable/userTimer'
+
+const { time, reset } = useTimer()
+</script>
+
+<template>
+  Temps écoulé : {{ time }} secondes
+  <button @click="reset">Reset</button>
+</template>
+```
+
+**Avantages** :
+- Réutilisation de la logique entre plusieurs composants
+- Séparation des préoccupations
+- Code plus maintenable et testable
+- Gestion automatique du cycle de vie
+
+### 6. **Composants et Communication**
 
 #### **Props (`defineProps`)**
 Permet de passer des données d'un parent vers un enfant.
 ```js
 // Dans l'enfant (Checkbox.vue)
 const props = defineProps({
-    label: String
+  label: String
 })
-```
-```html
-<!-- Dans le parent -->
-<Checkbox label="Ma tâche" />
 ```
 
 #### **Événements (`defineEmits`)**
 Permet à un enfant d'envoyer des signaux au parent.
 ```js
-// Dans l'enfant
+// Dans l'enfant (Checkbox.vue)
 const emits = defineEmits(['check', 'uncheck'])
-const onChange = () => emits('check')
-```
-```html
-<!-- Dans le parent -->
-<Checkbox @check="console.log('coché')" />
+const onChange = (event) => {
+  if (event.currentTarget.checked) {
+    emits('check') // Comme un signal
+  } else {
+    emits('uncheck')
+  }
+}
 ```
 
 #### **v-model sur les composants (`defineModel`)**
 Simplifie la liaison bidirectionnelle (two-way binding) entre parent et enfant (Vue 3.4+).
 ```js
-// Dans l'enfant
-const modelValue = defineModel()
+// Dans l'enfant (Checkbox.vue)
+const modelValue = defineModel() // Convention de nommage
+// Pour plusieurs v-model : defineModel('checkedValue')
 ```
 ```html
 <!-- Dans le parent -->
-<Checkbox v-model="task.completed" />
+<Checkbox v-model="task.completed" @check="..." @uncheck="..." label="Ma tâche" />
 ```
 
-#### **Slots (Injection de contenu)**
-Permet d'injecter du contenu HTML depuis le parent à l'intérieur du composant enfant.
+### 7. **Directives de template**
 
-**Slot par défaut :**
+#### `v-model` (Liaison bidirectionnelle)
 ```html
-<!-- Enfant (Button.vue) -->
-<button><slot></slot></button>
-
-<!-- Parent -->
-<Button><strong>Mon texte</strong></Button>
+<input type="text" v-model="page.title">
 ```
 
-#### **Slots nommés :**
-Permet de définir plusieurs zones d'injection (ex: header, main, footer).
+#### `@` (Gestion d'événements)
 ```html
-<!-- Enfant (Layout.vue) -->
-<header><slot name="header"></slot></header>
-<main><slot name="main"></slot></main>
-
-<!-- Parent -->
-<Layout>
-  <template #header>Mon Titre</template>
-  <template #main>Mon Contenu</template>
-</Layout>
+<button @click="reset">Reset</button>
 ```
 
-**Vérification de l'existence d'un slot :**
+#### Interpolation `{{ }}`
 ```html
-<!-- N'affiche le header que si le slot est fourni -->
-<header v-if="$slots.header"><slot name="header"></slot></header>
+{{ time }} secondes
 ```
 
-### 9. **Hooks de cycle de vie**
-Les hooks permettent d'exécuter du code à des moments précis du cycle de vie d'un composant.
+## 🎯 Exemple concret : Timer
 
-#### `onMounted()`
-S'exécute une fois que le composant est monté dans le DOM. Idéal pour :
-- Récupérer des données d'une API
-- Initialiser des bibliothèques tierces
-- Démarrer des timers ou intervalles
+Le composant `Timer.vue` illustre l'utilisation des hooks de cycle de vie :
 
-```js
-import { onMounted } from 'vue'
+```vue
+<template>
+  <div>{{ seconds }}</div>
+</template>
 
-onMounted(async () => {
-  // Chargement des tâches depuis un fichier JSON
-  const response = await fetch("taches.json")
-  const data = await response.json()
-  tasks.value = data
-})
-```
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 
-#### `onUnmounted()`
-S'exécute juste avant que le composant soit retiré du DOM. Utilisé pour le nettoyage :
-- Annuler des timers/intervalles
-- Désabonner des événements
-- Libérer des ressources
-
-```js
-import { onUnmounted } from 'vue'
-
+const seconds = ref(0)
 let intervalId = null
 
 onMounted(() => {
@@ -221,35 +231,23 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (intervalId) {
-    clearInterval(intervalId) // Nettoyage pour éviter les fuites mémoire
+    clearInterval(intervalId)
   }
 })
+</script>
 ```
 
-**Importance du nettoyage** : Sans `onUnmounted()`, les intervalles/timers continuent de s'exécuter même après la destruction du composant, causant des fuites mémoire.
+## 🏗️ Architecture du projet
 
-## 🎯 Concepts importants du projet
-
-### Tri des tâches
-Utilisation de `toSorted()` pour trier sans muter le tableau original :
-
-```js
-tasks.value.toSorted((a, b) => a.completed - b.completed)
-// Retourne : nombre négatif (a avant b), 0 (égal), nombre positif (b avant a)
-// Résultat : tâches non complétées en premier (false = 0, true = 1)
 ```
-
-### Filtrage conditionnel
-Combinaison de tri et filtrage avec `computed` :
-
-```js
-const sortedTasks = computed(() => {
-  const sorted = tasks.value.toSorted((a, b) => a.completed - b.completed)
-  if (hideCompleted.value === true) {
-    return sorted.filter(t => t.completed === false)
-  }
-  return sorted
-})
+src/
+├── App.vue                  # Composant racine avec watchers
+├── composable/
+│   └── userTimer.js        # Composable réutilisable pour le timer
+├── Timer.vue               # Composant timer avec lifecycle hooks
+├── Checkbox.vue            # Composant avec defineModel et emits
+├── Button.vue              # Composant avec slot
+└── Layout.vue              # Composant avec slots nommés
 ```
 
 ## 🚀 Lancer le projet
